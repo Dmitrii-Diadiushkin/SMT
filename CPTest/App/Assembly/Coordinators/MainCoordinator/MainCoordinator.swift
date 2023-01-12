@@ -39,7 +39,15 @@ extension MainCoordinator: Coordinator {
 
 private extension MainCoordinator {
     func performFlow() {
-        let view = factory.buildMainScreen()
-        router.setRootModule(view, hideBar: true)
+        let viewModel = factory.buildMainViewModel()
+        viewModel.onDetailScreen = { [weak self] id in
+            self?.runDetailsScreen(for: id)
+        }
+        let view = factory.buildMainScreen(with: viewModel)
+        router.setRootModule(view, hideBar: false)
+    }
+    
+    func runDetailsScreen(for id: Int) {
+        print(id)
     }
 }
