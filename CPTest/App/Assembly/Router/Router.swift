@@ -21,4 +21,8 @@ extension Router: Routable {
         rootController?.isNavigationBarHidden = hideBar
         rootController?.modalPresentationStyle = .fullScreen
     }
+    
+    func push(_ module: UIViewController, animated: Bool) {
+        rootController?.pushViewController(module, animated: animated)
+    }
 }

@@ -13,13 +13,17 @@ enum NetworkError: Error {
 
 final class NetworkHandler: NetworkHandlerProtocol {
     
-//    static let shared = NetworkHandler()
-//    private init() {}
-    
     private let baseUrlConstructor: URLComponents = {
         var baseURLComponetns = URLComponents()
         baseURLComponetns.scheme = "https"
         baseURLComponetns.host = "raw.githubusercontent.com"
+        return baseURLComponetns
+    }()
+    
+    private let baseImageUrlConstructor: URLComponents = {
+        var baseURLComponetns = URLComponents()
+        baseURLComponetns.scheme = "https"
+        baseURLComponetns.host = "github.com"
         return baseURLComponetns
     }()
     
@@ -31,20 +35,28 @@ final class NetworkHandler: NetworkHandlerProtocol {
     
     private enum RequestType {
         case listRequest
-        case charDetail
+        case hotelDetail
+        case imageRequest
     }
     
-    private func configureURL(requestType: RequestType, charID: Int? = nil) -> URL? {
+    private func configureURL(requestType: RequestType, requestID: String? = nil) -> URL? {
         switch requestType {
         case .listRequest:
             var urlConstructor = baseUrlConstructor
             urlConstructor.path = "/iMofas/ios-android-test/master/0777.json"
             let url = urlConstructor.url
+            return url
+        case .hotelDetail:
+            var urlConstructor = baseUrlConstructor
+            guard let hotelID = requestID else { return nil }
+            urlConstructor.path = "/iMofas/ios-android-test/master/\(hotelID).json"
+            let url = urlConstructor.url
             
             return url
-        case .charDetail:
-            var urlConstructor = baseUrlConstructor
-            urlConstructor.path = "/iMofas/ios-android-test/master/0777.json"
+        case .imageRequest:
+            var urlConstructor = baseImageUrlConstructor
+            guard let imageID = requestID else { return nil }
+            urlConstructor.path = "/iMofas/ios-android-test/raw/master/\(imageID)"
             let url = urlConstructor.url
             
             return url
@@ -74,6 +86,73 @@ final class NetworkHandler: NetworkHandlerProtocol {
                 } catch {
                     completion?(.failure(.somethingWrong))
                 }
+            }
+            else {
+                completion?(.failure(.somethingWrong))
+                return
+                
+            }
+        }
+        task.resume()
+    }
+    
+    func getHotelDetails(
+        for hotelID: Int,
+        completion: ((Result<HotelDetails, NetworkError>) -> Void)?) {
+            
+            guard let url = configureURL(requestType: .hotelDetail, requestID: String(hotelID)) else {
+                print("URL Error!")
+                return
+            }
+            
+            let cachePolicy = NSURLRequest.CachePolicy.reloadIgnoringLocalAndRemoteCacheData
+            
+            let urlRequest = URLRequest(url: url, cachePolicy: cachePolicy, timeoutInterval: 0)
+            let task = session.dataTask(with: urlRequest) { (data, response, error) in
+                if let _ = error {
+                    completion?(.failure(.somethingWrong))
+                    return
+                }
+                if let recievedData = data,
+                   let httpResponse = response as? HTTPURLResponse,
+                   httpResponse.statusCode == 200 {
+                    do {
+                        let json = try JSONDecoder().decode(HotelDetails.self, from: recievedData)
+                        completion?(.success(json))
+                    } catch {
+                        completion?(.failure(.somethingWrong))
+                    }
+                }
+                else {
+                    completion?(.failure(.somethingWrong))
+                    return
+                    
+                }
+            }
+            task.resume()
+        }
+    
+    func getImage(
+        for imageAdress: String,
+        completion: ((Result<Data, NetworkError>) -> Void)?
+    ) {
+        
+        guard let url = configureURL(requestType: .imageRequest, requestID: imageAdress) else {
+            print("URL Error!")
+            return
+        }
+        let cachePolicy = NSURLRequest.CachePolicy.reloadIgnoringLocalAndRemoteCacheData
+        
+        let urlRequest = URLRequest(url: url, cachePolicy: cachePolicy, timeoutInterval: 0)
+        let task = session.dataTask(with: urlRequest) { (data, response, error) in
+            if let _ = error {
+                completion?(.failure(.somethingWrong))
+                return
+            }
+            if let recievedData = data,
+               let httpResponse = response as? HTTPURLResponse,
+               httpResponse.statusCode == 200 {
+                completion?(.success(recievedData))
             }
             else {
                 completion?(.failure(.somethingWrong))

@@ -46,6 +46,9 @@ private extension MainCoordinator {
     }
     
     func runDetailsScreen(for id: Int) {
-        print(id)
+        let viewModel = factory.buildDetailsScreenViewModel(for: id)
+        let controller = factory.buildDetailsScreen(with: viewModel)
+        
+        router.push(controller, animated: true)
     }
 }

@@ -10,4 +10,6 @@ import UIKit
 protocol MainBuilderProtocol {
     func buildMainScreen(with viewModel: MainScreenViewModelProtocol) -> MainViewController
     func buildMainViewModel() -> MainScreenViewModelProtocol
+    func buildDetailsScreenViewModel(for hotelID: Int) -> DetailsScreenViewModelProtocol
+    func buildDetailsScreen(with viewModel: DetailsScreenViewModelProtocol) -> DetailsViewController
 }

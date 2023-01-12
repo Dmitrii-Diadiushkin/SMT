@@ -35,11 +35,11 @@ class MainViewController: UIViewController {
         super.viewDidLoad()
         binding()
         configureDataSource()
+        viewModel.loadData()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        viewModel.loadData()
     }
 }
 
@@ -49,7 +49,6 @@ private extension MainViewController {
             DispatchQueue.main.async {
                 switch updaterState {
                 case let .success(recievedData):
-                    print("Got \(recievedData.count) hotels")
                     self.updatingView.isHidden = true
                     self.errorView.isHidden = true
                     self.tableView.isHidden = false
@@ -57,7 +56,6 @@ private extension MainViewController {
                     self.configureUpdateMenu()
                     self.showData(recievedData)
                 case .inProgress:
-                    print("Updating data")
                     self.updatingView.isHidden = false
                     self.errorView.isHidden = true
                     self.tableView.isHidden = true
@@ -69,7 +67,6 @@ private extension MainViewController {
                     self.tableView.isHidden = true
                     self.navigationItem.leftBarButtonItem = nil
                     self.configureUpdateMenu()
-                    print("Something went wrong")
                 }
             }
             
@@ -141,7 +138,6 @@ private extension MainViewController {
         let noSort = UIAction(
             title: "Default sort",
             image: sorting == .defaultSorting ? selectedImage : nil) { action in
-                print("No sort tapped")
                 self.sorting = .defaultSorting
                 self.viewModel.sortHotels(sortType: .defaultSorting)
             }
@@ -149,7 +145,6 @@ private extension MainViewController {
         let distanceDescending = UIAction(
             title: "Distance descending",
             image: sorting == .distanceDesc ? selectedImage : nil) { action in
-                print("Distance descending")
                 self.sorting = .distanceDesc
                 self.viewModel.sortHotels(sortType: .distanceDesc)
             }
@@ -157,7 +152,6 @@ private extension MainViewController {
         let distanceAscending = UIAction(
             title: "Distance ascending",
             image: sorting == .distanceAsc ? selectedImage : nil) { action in
-                print("Distance ascending")
                 self.sorting = .distanceAsc
                 self.viewModel.sortHotels(sortType: .distanceAsc)
             }
@@ -165,7 +159,6 @@ private extension MainViewController {
         let suitesAvailableDesending = UIAction(
             title: "Free rooms descending",
             image: sorting == .roomsDesc ? selectedImage : nil) { action in
-                print("Free rooms descending")
                 self.sorting = .roomsDesc
                 self.viewModel.sortHotels(sortType: .roomsDesc)
             }
@@ -173,7 +166,6 @@ private extension MainViewController {
         let suitesAvailableAsending = UIAction(
             title: "Free rooms ascending",
             image: sorting == .roomsAsc ? selectedImage : nil) { action in
-                print("Free rooms ascending")
                 self.sorting = .roomsAsc
                 self.viewModel.sortHotels(sortType: .roomsAsc)
             }

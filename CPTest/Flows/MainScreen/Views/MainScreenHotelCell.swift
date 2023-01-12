@@ -13,6 +13,7 @@ final class MainScreenHotelCell: UITableViewCell {
     
     private let hotelNameLabel: UILabel = {
         let view = UILabel()
+        view.numberOfLines = 0
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
