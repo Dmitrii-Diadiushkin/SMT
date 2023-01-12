@@ -35,12 +35,12 @@ final class MainScreenViewModel: MainScreenViewModelProtocol {
     
     func loadData() {
         hotelDataUpdater.send(.inProgress)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
             self?.dataManager.getHotelList { [weak self] result in
                 switch result {
                 case let .success(recievedData):
                     guard let self = self else { return }
-                    var hotelData = self.createHotelListModelView(from: recievedData)
+                    let hotelData = self.createHotelListModelView(from: recievedData)
                     self.hotelDataUpdater.send(.success(hotelData))
                 case .failure(_):
                     self?.hotelDataUpdater.send(.failure)
@@ -69,8 +69,10 @@ final class MainScreenViewModel: MainScreenViewModelProtocol {
             break
         }
     }
-    
-    private func getSortedList(for data: [HotelListModelView], with sortType: HotelsSortType) -> [HotelListModelView] {
+}
+
+private extension MainScreenViewModel {
+    func getSortedList(for data: [HotelListModelView], with sortType: HotelsSortType) -> [HotelListModelView] {
         switch sortType {
         case .defaultSorting:
             return data.sorted { $0.itemPos < $1.itemPos }
@@ -85,7 +87,7 @@ final class MainScreenViewModel: MainScreenViewModelProtocol {
         }
     }
     
-    private func createHotelListModelView(from data: [HotelList]) -> [HotelListModelView] {
+    func createHotelListModelView(from data: [HotelList]) -> [HotelListModelView] {
         var dataCounter = 0
         var hotelData = [HotelListModelView]()
         data.forEach { hotel in

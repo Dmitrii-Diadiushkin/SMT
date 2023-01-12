@@ -26,12 +26,10 @@ final class MainCoordinator: BaseCoordinator, MainCoordinatorOutput {
         self.factory = factory
         self.coordinatorFactory = CoordinatorFactory()
         super.init()
-        start()
     }
 }
 
 extension MainCoordinator: Coordinator {
-    
     func start() {
         performFlow()
     }

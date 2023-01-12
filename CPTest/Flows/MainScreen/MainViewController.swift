@@ -21,7 +21,7 @@ class MainViewController: UIViewController {
     
     private var bag = Set<AnyCancellable>()
     
-    init(viewModel: MainScreenViewModelProtocol = MainScreenViewModel()) {
+    init(viewModel: MainScreenViewModelProtocol) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
         setupViews()
