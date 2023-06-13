@@ -11,7 +11,6 @@ final class AppCoordinator: BaseCoordinator {
     let window: UIWindow?
     fileprivate let factory: CoordinatorFactoryProtocol
     fileprivate let router: Routable
-    
     init(
         router: Routable,
         factory: CoordinatorFactoryProtocol,
@@ -23,7 +22,6 @@ final class AppCoordinator: BaseCoordinator {
         super.init()
         windowSettings()
     }
-    
     class func build(
         router: Router,
         window: UIWindow?
@@ -36,7 +34,6 @@ final class AppCoordinator: BaseCoordinator {
         )
         return appCoordinator
     }
-    
     private func windowSettings() {
         window?.overrideUserInterfaceStyle = .light
         window?.backgroundColor = .black
@@ -48,7 +45,6 @@ extension AppCoordinator: Coordinator {
         performMainFlow()
         window?.makeKeyAndVisible()
     }
-    
     private func performMainFlow() {
         let coordinator = factory.makeMainCoordinator(router: router)
         coordinator.finishFlow = { [unowned self, unowned coordinator] in

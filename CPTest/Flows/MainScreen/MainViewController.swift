@@ -10,34 +10,27 @@ import Foundation
 import UIKit
 
 class MainViewController: UIViewController {
-    
     private let viewModel: MainScreenViewModelProtocol
-    
     private let tableView = UITableView()
     private let updatingView = MainProgressView()
     private let errorView = MainErrorView()
     private var dataSource: UITableViewDiffableDataSource<Int, HotelListModelView>! = nil
     private var sorting: HotelsSortType = .defaultSorting
-    
     private var bag = Set<AnyCancellable>()
-    
     init(viewModel: MainScreenViewModelProtocol) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
         setupViews()
     }
-    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         binding()
         configureDataSource()
         viewModel.loadData()
     }
-    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
     }
@@ -45,41 +38,37 @@ class MainViewController: UIViewController {
 
 private extension MainViewController {
     func binding() {
-        viewModel.hotelDataUpdater.dropFirst().sink { updaterState in
-            DispatchQueue.main.async {
-                switch updaterState {
-                case let .success(recievedData):
-                    self.updatingView.isHidden = true
-                    self.errorView.isHidden = true
-                    self.tableView.isHidden = false
-                    self.configureSortMenu()
-                    self.configureUpdateMenu()
-                    self.showData(recievedData)
-                case .inProgress:
-                    self.updatingView.isHidden = false
-                    self.errorView.isHidden = true
-                    self.tableView.isHidden = true
-                    self.navigationItem.leftBarButtonItem = nil
-                    self.navigationItem.rightBarButtonItem = nil
-                case .failure:
-                    self.errorView.isHidden = false
-                    self.updatingView.isHidden = true
-                    self.tableView.isHidden = true
-                    self.navigationItem.leftBarButtonItem = nil
-                    self.configureUpdateMenu()
-                }
+        viewModel.hotelDataPublisher.receive(on: DispatchQueue.main).dropFirst().sink { [weak self] updaterState in
+            guard let self = self else { return }
+            switch updaterState {
+            case let .success(recievedData):
+                self.updatingView.isHidden = true
+                self.errorView.isHidden = true
+                self.tableView.isHidden = false
+                self.configureSortMenu()
+                self.configureUpdateMenu()
+                self.showData(recievedData)
+            case .inProgress:
+                self.updatingView.isHidden = false
+                self.errorView.isHidden = true
+                self.tableView.isHidden = true
+                self.navigationItem.leftBarButtonItem = nil
+                self.navigationItem.rightBarButtonItem = nil
+            case .failure:
+                self.errorView.isHidden = false
+                self.updatingView.isHidden = true
+                self.tableView.isHidden = true
+                self.navigationItem.leftBarButtonItem = nil
+                self.configureUpdateMenu()
             }
-            
         }.store(in: &bag)
     }
-    
     func setupViews() {
         view.backgroundColor = .white
         configureTableView()
         configureUpdatingView()
         configureErrorView()
     }
-    
     func configureTableView() {
         view.addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -95,7 +84,6 @@ private extension MainViewController {
         )
         tableView.delegate = self
     }
-    
     func configureUpdatingView() {
         view.addSubview(updatingView)
         NSLayoutConstraint.activate([
@@ -104,7 +92,6 @@ private extension MainViewController {
         ])
         updatingView.isHidden = true
     }
-    
     func configureErrorView() {
         view.addSubview(errorView)
         NSLayoutConstraint.activate([
@@ -113,7 +100,6 @@ private extension MainViewController {
         ])
         errorView.isHidden = true
     }
-    
     func configureUpdateMenu() {
         let updateMenuButton = UIBarButtonItem(
             image: UIImage(systemName: "arrow.counterclockwise.circle"),
@@ -121,10 +107,8 @@ private extension MainViewController {
             target: self,
             action: #selector(refresh)
         )
-        
         self.navigationItem.rightBarButtonItem  = updateMenuButton
     }
-    
     func configureSortMenu() {
         let sortMenuButton = UIBarButtonItem(
             image: UIImage(systemName: "arrow.up.arrow.down"),
@@ -132,40 +116,34 @@ private extension MainViewController {
             target: self,
             action: nil
         )
-        
         let selectedImage = UIImage(systemName: "checkmark")
-        
         let noSort = UIAction(
             title: "Default sort",
-            image: sorting == .defaultSorting ? selectedImage : nil) { action in
+            image: sorting == .defaultSorting ? selectedImage : nil) { _ in
                 self.sorting = .defaultSorting
                 self.viewModel.sortHotels(sortType: .defaultSorting)
             }
-        
         let distanceDescending = UIAction(
             title: "Distance descending",
-            image: sorting == .distanceDesc ? selectedImage : nil) { action in
+            image: sorting == .distanceDesc ? selectedImage : nil) { _ in
                 self.sorting = .distanceDesc
                 self.viewModel.sortHotels(sortType: .distanceDesc)
             }
-        
         let distanceAscending = UIAction(
             title: "Distance ascending",
-            image: sorting == .distanceAsc ? selectedImage : nil) { action in
+            image: sorting == .distanceAsc ? selectedImage : nil) { _ in
                 self.sorting = .distanceAsc
                 self.viewModel.sortHotels(sortType: .distanceAsc)
             }
-        
         let suitesAvailableDesending = UIAction(
             title: "Free rooms descending",
-            image: sorting == .roomsDesc ? selectedImage : nil) { action in
+            image: sorting == .roomsDesc ? selectedImage : nil) { _ in
                 self.sorting = .roomsDesc
                 self.viewModel.sortHotels(sortType: .roomsDesc)
             }
-        
         let suitesAvailableAsending = UIAction(
             title: "Free rooms ascending",
-            image: sorting == .roomsAsc ? selectedImage : nil) { action in
+            image: sorting == .roomsAsc ? selectedImage : nil) { _ in
                 self.sorting = .roomsAsc
                 self.viewModel.sortHotels(sortType: .roomsAsc)
             }
@@ -180,12 +158,11 @@ private extension MainViewController {
         )
         self.navigationItem.leftBarButtonItem  = sortMenuButton
     }
-    
     func configureDataSource() {
         self.dataSource = UITableViewDiffableDataSource
-        <Int, HotelListModelView> (tableView: tableView) {
-            (tableView: UITableView, indexPath: IndexPath, item: HotelListModelView) -> UITableViewCell? in
-            
+        <Int, HotelListModelView>(
+            tableView: tableView
+        ) { (tableView: UITableView, indexPath: IndexPath, item: HotelListModelView) -> UITableViewCell? in
             guard let cell = tableView.dequeueReusableCell(
                 withIdentifier: MainScreenHotelCell.reuseIdentifier,
                 for: indexPath) as? MainScreenHotelCell
@@ -196,15 +173,13 @@ private extension MainViewController {
             return cell
         }
     }
-    
     func showData(_ data: [HotelListModelView]) {
         var currentSnapshot = NSDiffableDataSourceSnapshot<Int, HotelListModelView>()
         currentSnapshot.appendSections([0])
         currentSnapshot.appendItems(data)
         dataSource.apply(currentSnapshot, animatingDifferences: false)
     }
-    
-    @objc func refresh(){
+    @objc func refresh() {
         sorting = .defaultSorting
         viewModel.loadData()
     }

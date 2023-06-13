@@ -10,23 +10,26 @@ import Foundation
 import UIKit
 
 protocol DetailsScreenViewModelProtocol: AnyObject {
-    var hotelDetailsImageUpdater: PassthroughSubject<UIImage, Never> { get set }
-    var hotelDetailsDataUpdater: PassthroughSubject<HotelDetailsModelView, Never> { get set }
+    var hotelDetailsImagePublisher: AnyPublisher<UIImage, Never> { get }
+    var hotelDetailsDataPublisher: AnyPublisher<HotelDetailsModelView, Never> { get }
     func loadData()
 }
 
 final class DetailsScreenViewModel: DetailsScreenViewModelProtocol {
-    var hotelDetailsImageUpdater = PassthroughSubject<UIImage, Never>()
-    var hotelDetailsDataUpdater = PassthroughSubject<HotelDetailsModelView, Never>()
-    
+    var hotelDetailsImagePublisher: AnyPublisher<UIImage, Never> {
+        hotelDetailsImageUpdater.eraseToAnyPublisher()
+    }
+    var hotelDetailsDataPublisher: AnyPublisher<HotelDetailsModelView, Never> {
+        hotelDetailsDataUpdater.eraseToAnyPublisher()
+    }
+    private let hotelDetailsImageUpdater = PassthroughSubject<UIImage, Never>()
+    private let hotelDetailsDataUpdater = PassthroughSubject<HotelDetailsModelView, Never>()
     private let hotelID: Int
     private let dataManager: NetworkHandlerProtocol
-    
     init(hotelID: Int) {
         self.hotelID = hotelID
         self.dataManager = NetworkHandler()
     }
-    
     func loadData() {
         dataManager.getHotelDetails(for: hotelID) { [weak self] result in
             switch result {
@@ -37,7 +40,7 @@ final class DetailsScreenViewModel: DetailsScreenViewModelProtocol {
                 if let imageAdress = recievedData.image {
                     self.getImage(with: imageAdress)
                 }
-            case .failure(_):
+            case .failure:
                 print("Error")
             }
         }
@@ -52,12 +55,11 @@ private extension DetailsScreenViewModel {
                 if let recievedImage = UIImage(data: recievedData) {
                     self?.createAndSendCroppedImage(recievedImage)
                 }
-            case .failure(_):
+            case .failure:
                 print("Error")
             }
         }
     }
-    
     func createAndSendCroppedImage(_ sourceImage: UIImage) {
         let sourceSize = sourceImage.size
         let cropRect = CGRect(
@@ -66,15 +68,14 @@ private extension DetailsScreenViewModel {
             width: sourceSize.width - 2,
             height: sourceSize.height - 2
         )
-        let sourceCGImage = sourceImage.cgImage!
-        if let croppedCGImage = sourceCGImage.cropping(
+        if let sourceCGImage = sourceImage.cgImage,
+           let croppedCGImage = sourceCGImage.cropping(
             to: cropRect
         ) {
-            let resultImage = UIImage(cgImage: croppedCGImage)
+            let resultImage = UIImage(cgImage: croppedCGImage, scale: 1.0, orientation: .up)
             hotelDetailsImageUpdater.send(resultImage)
         }
     }
-    
     func createHotelDetails(data: HotelDetails) -> HotelDetailsModelView {
         let suitesCount = data.suitesAvailability.components(separatedBy: ":").filter { $0 != "" }.count
         return HotelDetailsModelView(

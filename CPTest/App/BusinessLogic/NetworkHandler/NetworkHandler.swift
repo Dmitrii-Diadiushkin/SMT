@@ -12,27 +12,23 @@ enum NetworkError: Error {
 }
 
 final class NetworkHandler: NetworkHandlerProtocol {
-    
     private let baseUrlConstructor: URLComponents = {
         var baseURLComponetns = URLComponents()
         baseURLComponetns.scheme = "https"
         baseURLComponetns.host = "raw.githubusercontent.com"
         return baseURLComponetns
     }()
-    
     private let baseImageUrlConstructor: URLComponents = {
         var baseURLComponetns = URLComponents()
         baseURLComponetns.scheme = "https"
         baseURLComponetns.host = "github.com"
         return baseURLComponetns
     }()
-    
     private let session: URLSession = {
         let config = URLSessionConfiguration.default
         let session = URLSession(configuration: config)
         return session
     }()
-    
     private enum RequestType {
         case listRequest
         case hotelDetail
@@ -51,14 +47,12 @@ final class NetworkHandler: NetworkHandlerProtocol {
             guard let hotelID = requestID else { return nil }
             urlConstructor.path = "/iMofas/ios-android-test/master/\(hotelID).json"
             let url = urlConstructor.url
-            
             return url
         case .imageRequest:
             var urlConstructor = baseImageUrlConstructor
             guard let imageID = requestID else { return nil }
             urlConstructor.path = "/iMofas/ios-android-test/raw/master/\(imageID)"
             let url = urlConstructor.url
-            
             return url
         }
     }
@@ -70,10 +64,9 @@ final class NetworkHandler: NetworkHandlerProtocol {
         }
         
         let cachePolicy = NSURLRequest.CachePolicy.reloadIgnoringLocalAndRemoteCacheData
-        
         let urlRequest = URLRequest(url: url, cachePolicy: cachePolicy, timeoutInterval: 0)
         let task = session.dataTask(with: urlRequest) { (data, response, error) in
-            if let _ = error {
+            if error != nil {
                 completion?(.failure(.somethingWrong))
                 return
             }
@@ -86,11 +79,9 @@ final class NetworkHandler: NetworkHandlerProtocol {
                 } catch {
                     completion?(.failure(.somethingWrong))
                 }
-            }
-            else {
+            } else {
                 completion?(.failure(.somethingWrong))
                 return
-                
             }
         }
         task.resume()
@@ -99,17 +90,14 @@ final class NetworkHandler: NetworkHandlerProtocol {
     func getHotelDetails(
         for hotelID: Int,
         completion: ((Result<HotelDetails, NetworkError>) -> Void)?) {
-            
             guard let url = configureURL(requestType: .hotelDetail, requestID: String(hotelID)) else {
                 print("URL Error!")
                 return
             }
-            
             let cachePolicy = NSURLRequest.CachePolicy.reloadIgnoringLocalAndRemoteCacheData
-            
             let urlRequest = URLRequest(url: url, cachePolicy: cachePolicy, timeoutInterval: 0)
             let task = session.dataTask(with: urlRequest) { (data, response, error) in
-                if let _ = error {
+                if error != nil {
                     completion?(.failure(.somethingWrong))
                     return
                 }
@@ -122,11 +110,9 @@ final class NetworkHandler: NetworkHandlerProtocol {
                     } catch {
                         completion?(.failure(.somethingWrong))
                     }
-                }
-                else {
+                } else {
                     completion?(.failure(.somethingWrong))
                     return
-                    
                 }
             }
             task.resume()
@@ -136,28 +122,24 @@ final class NetworkHandler: NetworkHandlerProtocol {
         for imageAdress: String,
         completion: ((Result<Data, NetworkError>) -> Void)?
     ) {
-        
         guard let url = configureURL(requestType: .imageRequest, requestID: imageAdress) else {
             print("URL Error!")
             return
         }
         let cachePolicy = NSURLRequest.CachePolicy.reloadIgnoringLocalAndRemoteCacheData
-        
         let urlRequest = URLRequest(url: url, cachePolicy: cachePolicy, timeoutInterval: 0)
         let task = session.dataTask(with: urlRequest) { (data, response, error) in
-            if let _ = error {
+            if error != nil {
                 completion?(.failure(.somethingWrong))
                 return
             }
             if let recievedData = data,
-               let httpResponse = response as? HTTPURLResponse,
-               httpResponse.statusCode == 200 {
+               let statusCode = (response as? HTTPURLResponse)?.statusCode,
+                200..<300 ~= statusCode {
                 completion?(.success(recievedData))
-            }
-            else {
+            } else {
                 completion?(.failure(.somethingWrong))
                 return
-                
             }
         }
         task.resume()

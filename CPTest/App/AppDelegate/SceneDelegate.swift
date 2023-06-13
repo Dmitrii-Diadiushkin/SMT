@@ -19,11 +19,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         else { return UINavigationController() }
         return controller
     }
-    
-    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+    func scene(
+        _ scene: UIScene,
+        willConnectTo session: UISceneSession,
+        options connectionOptions: UIScene.ConnectionOptions
+    ) {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         self.window = self.window ?? UIWindow(windowScene: windowScene)
-        
         appCoordinator = AppCoordinator.build(
             router: Router(rootController: rootController),
             window: window

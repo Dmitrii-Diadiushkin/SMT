@@ -15,24 +15,23 @@ enum RecieveState {
 }
 
 protocol MainScreenViewModelProtocol: AnyObject {
-    var hotelDataUpdater: CurrentValueSubject<RecieveState, Never> { get set }
-    var onDetailScreen: ((Int) -> ())? { get set }
-    
+    var hotelDataPublisher: AnyPublisher<RecieveState, Never> { get }
+    var onDetailScreen: ((Int) -> Void)? { get set }
     func loadData()
     func hotelSelected(with id: Int)
     func sortHotels(sortType: HotelsSortType)
 }
 
 final class MainScreenViewModel: MainScreenViewModelProtocol {
-    var hotelDataUpdater = CurrentValueSubject<RecieveState, Never>(.inProgress)
-    var onDetailScreen: ((Int) -> ())?
-    
+    var hotelDataPublisher: AnyPublisher<RecieveState, Never> {
+        return hotelDataUpdater.eraseToAnyPublisher()
+    }
+    private let hotelDataUpdater = CurrentValueSubject<RecieveState, Never>(.inProgress)
+    var onDetailScreen: ((Int) -> Void)?
     private let dataManager: NetworkHandlerProtocol
-    
     init() {
         self.dataManager = NetworkHandler()
     }
-    
     func loadData() {
         hotelDataUpdater.send(.inProgress)
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
@@ -42,13 +41,12 @@ final class MainScreenViewModel: MainScreenViewModelProtocol {
                     guard let self = self else { return }
                     let hotelData = self.createHotelListModelView(from: recievedData)
                     self.hotelDataUpdater.send(.success(hotelData))
-                case .failure(_):
+                case .failure:
                     self?.hotelDataUpdater.send(.failure)
                 }
             }
         }
     }
-    
     func hotelSelected(with id: Int) {
         switch hotelDataUpdater.value {
         case let .success(data):
@@ -59,7 +57,6 @@ final class MainScreenViewModel: MainScreenViewModelProtocol {
             break
         }
     }
-    
     func sortHotels(sortType: HotelsSortType) {
         switch hotelDataUpdater.value {
         case let .success(data):
@@ -86,7 +83,6 @@ private extension MainScreenViewModel {
             return data.sorted { $0.suitesAvailable > $1.suitesAvailable }
         }
     }
-    
     func createHotelListModelView(from data: [HotelList]) -> [HotelListModelView] {
         var dataCounter = 0
         var hotelData = [HotelListModelView]()

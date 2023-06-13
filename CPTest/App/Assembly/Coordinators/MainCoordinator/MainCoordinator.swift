@@ -12,13 +12,10 @@ protocol MainCoordinatorOutput: AnyObject {
 }
 
 final class MainCoordinator: BaseCoordinator, MainCoordinatorOutput {
-    
     var finishFlow: CompletionBlock?
 
     fileprivate let router: Routable
-    
     fileprivate let factory: MainBuilderProtocol
-    
     private let coordinatorFactory: CoordinatorFactory
 
     init(router: Routable, factory: MainBuilderProtocol) {
@@ -44,11 +41,9 @@ private extension MainCoordinator {
         let view = factory.buildMainScreen(with: viewModel)
         router.setRootModule(view, hideBar: false)
     }
-    
     func runDetailsScreen(for id: Int) {
         let viewModel = factory.buildDetailsScreenViewModel(for: id)
         let controller = factory.buildDetailsScreen(with: viewModel)
-        
         router.push(controller, animated: true)
     }
 }

@@ -23,7 +23,6 @@ struct HotelDetails: Codable {
         case suitesAvailability = "suites_availability"
         case lat, lon
     }
-    
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(Int.self, forKey: .id)
@@ -34,7 +33,6 @@ struct HotelDetails: Codable {
         suitesAvailability = try container.decode(String.self, forKey: .suitesAvailability)
         lat = try container.decode(Double.self, forKey: .lat)
         lon = try container.decode(Double.self, forKey: .lon)
-        
         let imageName = try container.decode(String?.self, forKey: .image)
         if let img = imageName,
            img == "" {

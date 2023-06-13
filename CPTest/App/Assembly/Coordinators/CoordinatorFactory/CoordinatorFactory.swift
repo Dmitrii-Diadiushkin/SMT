@@ -14,10 +14,8 @@ protocol CoordinatorFactoryProtocol {
 final class CoordinatorFactory {
     private lazy var modulesFactory = ModulesFactory()
 }
- 
 extension CoordinatorFactory: CoordinatorFactoryProtocol {
     func makeMainCoordinator(router: Routable) -> Coordinator & MainCoordinatorOutput {
         return MainCoordinator(router: router, factory: modulesFactory)
     }
 }
-
